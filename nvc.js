@@ -62,7 +62,7 @@ var NVC = (function () {
             return {
                 name : 'Andrey',
                 address : 'Earth',
-                work : 'FOX'
+                work : 'LOL'
             };
         });
 
