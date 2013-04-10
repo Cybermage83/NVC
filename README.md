@@ -1,4 +1,4 @@
 NVC
 ===
 
-namespace View and Controller
+Named View Controller
