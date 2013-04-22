@@ -1,99 +1,109 @@
 var NVC = (function () {
     "use strict";
 
-    var HS = function () {}, proto = HS.prototype;
+    var nvc = function () {}, proto = nvc.prototype;
 
-    HS.extend = function (name, func) {
-        HS[name] = func;
+    nvc.extend = function (name, func) {
+        nvc[name] = func;
     };
 
-    HS.modal = function (name) {
+    nvc.layer = function (name) {
 
-        if (!('domModal' in proto)) {
-            proto.domModal = {};
+        if (!('Model' in proto)) {
+            proto.Model = {};
         }
 
-        if (!(name in proto.domModal)) {
+        if (!(name in proto.Model)) {
 
             // perhaps i may not want to use prototype here
-            proto.domModal[name] = {};
+            proto.Model[name] = {};
         }
 
         // may want to have an extender here
-        return proto.domModal[name];
+        return proto.Model[name];
     };
 
-    var domView = function (name, func) {
-        HS.modal(name).view = (function () {
+    var View = function (name, func) {
+        nvc.layer(name).view = (function () {
             return func();
         }());
     },
 
-    domController = function (name, func) {
-        HS.modal(name).controller = (function () {
-
+    Controller = function (name, func) {
+        nvc.layer(name).controller = (function () {
+            console.log('controller',this);
             // can do return for this call
-            func(proto.domModal[name].view);
+            func.call(proto.Model[name].controller, proto.Model[name].view, proto.Model[name].model);
+            //func(proto.Model[name].view, proto.Model[name].view);
         }());
     },
 
-    domModal = function (name, func) {
-        HS.modal(name).model = (function () {
-            return func();
-        }());
+    Model = function (name, func) {
+        if (!('model' in nvc.layer(name))) {
+            nvc.layer(name).model = {};
+        }
+
+        [].push.call(proto.Model[name].model, (function () {
+                return func();
+            }())
+        );
+
+
     };
 
-    HS.extend('model', domModal);
-    HS.extend('view', domView);
-    HS.extend('execute', domController);
+    nvc.extend('model', Model);
+    nvc.extend('view', View);
+    nvc.extend('execute', Controller);
 
-    return HS;
+    return nvc;
 }());
 
 (function($, window){
     "use strict";
-    
+
     $(document).ready(function(){
 
-        NVC.model('close', function(response) {
+        NVC.model('click', function() {
+            console.log('this',this);
 
-            // any json request here
-            // have return states such as pending or error for controller to know
             return {
-                name : 'Andrey',
-                address : 'Earth',
-                work : 'LOL'
-            };
-        });
-
-        NVC.view('close', function () {
-            return {
-                el : '.close',
-                config : {target:'.photo', next : '#next'},
-                events : {
-                    'click .news' : 'news'
-                },
-                template : function (el, config, data) {
-                    console.log('contoller executed', el, config, data);
+                data : {
+                    title : 'cool',
+                    link  : 'http://i.imgur.com/r5i8mbc.jpg',
+                    width : '200',
+                    height : '200'
                 }
             };
         });
 
-        NVC.execute('close', function (view) {
-            $(view.el).bind('click',function() {
-                $(view.config.target).hide();
-            });
+        NVC.view('click', function () {
+            return {
+                el : $('#click'),
+                target : $('#images'),
+                template : function (data) {
+                    console.log('data',data.data);
+
+
+                    return _.template('<h5><%= title %></h5>' +
+                           '<img src="<%= link %>" width="<%= width%>" ' +
+                           'height="<%= height %>" />', data.data);
+                }
+            };
         });
 
-        NVC.execute('close', function (view) {
-            $(view.config.next).bind('mouseover',function (e) {
-                $(this).css('cursor','pointer');
+        NVC.execute('click', function (view, model) {
+            console.log('this',this,view);
+
+
+            view.el.on('click', function () {
+                view.target.append(view.template(model[0]));
+                console.log('this', this,'view',view,'layer',model[0]);
             });
+
         });
 
-        console.log('hugeSlider',NVC.prototype);
-        window.z = new NVC();
-        console.log('z',window.z);
+      window.nNVC = new NVC();
+
     });
 
 }(jQuery, window));
